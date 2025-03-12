@@ -1,0 +1,52 @@
+name: Workflow debug
+on:
+  workflow_dispatch:
+jobs:
+  debug:
+    name: Debug workflow contexts and environments
+    runs-on: ubuntu-latest
+    steps:
+      - name: Shell environment
+        run: |
+          printenv | sort
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+          
+      - name: Dump runner context
+        env:
+          CONTEXT: ${{ toJson(runner) }}
+        run: echo "$CONTEXT"
+
+      - name: Actions contexts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            console.log(context)
+
+      - name: List workspace
+        run: |
+          stat --help
+          stat $GITHUB_WORKSPACE
+          tree $GITHUB_WORKSPACE
+      
+      - name: List workspace (context)
+        run: |
+          tree ${{ github.workspace }}
+
+  cli-9808:
+    name: cli/cli#9808 testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert secret value matches original
+        env:
+          TESTSCRIPTS: ${{ secrets.TESTSCRIPTS }}
+        run: |
+          if [[ "$TESTSCRIPTS" == "original" ]]; then
+            echo "GitHub Actions secret value matches"
+          else
+            echo "GitHub Actions secret value does not match"
+            exit 1
+          fi
